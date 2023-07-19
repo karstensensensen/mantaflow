@@ -40,7 +40,7 @@ for t in range(400):
 	solvePressure(flags=flags, vel=vel, pressure=pressure)
 
 	# small example function in test.cpp
-	numpyTest( density, npArray, 0.01 ) # just adds constant value everywhere
+	# numpyTest( density, npArray, 0.01 ) # just adds constant value everywhere
 
 	# grid conversion from numpyconvert.cpp plugins
 	copyArrayToGridReal( target=tmp, source=npArray )

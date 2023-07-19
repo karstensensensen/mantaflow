@@ -9,11 +9,18 @@
 *
 * Convert mantaflow grids to/from numpy arrays
 *
+* Modifications copyright (c) 2023 zarsten
+* 
+* modifications: change long to Py_intptr_t in all dims related code,
+* in order to fix size miss match on msvc (long = 4 bytes, Py_intptr_t = 8 bytes in x64 builds)
+* 
 ******************************************************************************/
 
 #ifdef _PCONVERT_H
 #ifndef _NUMPYCONVERT_H
 #define _NUMPYCONVERT_H
+
+#include <pyport.h>
 
 enum NumpyTypes
 {
@@ -60,7 +67,7 @@ namespace Manta
 			void *pData;
 			NumpyTypes DataType;
 			unsigned int TotalSize;
-			std::vector<long> Dims;
+			std::vector<Py_intptr_t> Dims;
 		private:
 			void *pParentPyArray;
 	};

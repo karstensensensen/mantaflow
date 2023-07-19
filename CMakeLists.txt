@@ -8,6 +8,12 @@
 # Apache License, Version 2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 #
+# 
+# Modifications copyright (c) 2023 zarsten
+# 
+# modifications: Add MANTA_MSVC_MP option, to speed up visual studio based builds using multi processing.
+#
+#
 #******************************************************************************
 
 project (MantaFlow)
@@ -46,6 +52,9 @@ if(NOT CMAKE_BUILD_TYPE)
 else()
 	MESSAGE("Build-type: '${CMAKE_BUILD_TYPE}'")
 endif()
+
+# visual studio multiprocessing option
+option(MANTA_MSVC_MP "Enable multi process compilation for visual studio" ON)
 
 # compilation versions
 OPTION(DEBUG "Enable debug compilation" OFF)
@@ -137,6 +146,8 @@ MESSAGE(STATUS "Options - "
 	" -DPYTHON_VERSION='${PYTHON_VERSION}' "
 	" -DNUMPY='${NUMPY}' "
 	" -DNOPYTHON='${NOPYTHON}' "
+	# MP option
+	" -DMANTA_MSVC_MP='${MANTA_MSVC_MP}' "
 	)
 MESSAGE(STATUS "Multithreading type : ${MT_TYPE}")
 MESSAGE(STATUS "")
@@ -158,6 +169,11 @@ set(SOURCES
 add_executable(prep ${SOURCES})
 if(NOT WIN32)
 	set_target_properties(prep PROPERTIES COMPILE_FLAGS "-Wall -O2")
+endif()
+
+# setup /MP flag
+if(${MANTA_MSVC_MP} AND MSVC)
+	target_compile_options(prep PRIVATE /MP)
 endif()
 
 #******************************************************************************
@@ -688,6 +704,12 @@ if(NOT NOPYTHON)
 		set_source_files_properties(${PP_SOURCES} ${PP_HEADERS} ${NOPP_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 		add_executable(${EXECCMD} ${SOURCES} ${PP_SOURCES} ${PP_HEADERS})
 		source_group(Generated FILES ${SOURCES} ${HEADERS})
+		
+		# setup /MP flag
+		if(${MANTA_MSVC_MP} AND MSVC)
+			target_compile_options(${EXECCMD} PRIVATE /MP)
+		endif()
+		
 	else()
 		add_executable(${EXECCMD} ${SOURCES} ${GITINFO})
 	endif()
@@ -709,6 +731,13 @@ elseif(BUILD_STATIC)
 	# only build static library, e.g. for nopython mode
 	ADD_LIBRARY (core OBJECT ${SOURCES} ${GITINFO})
 	ADD_LIBRARY (${EXECCMD} STATIC $<TARGET_OBJECTS:core>)
+	
+	# setup /MP flag
+	if(${MANTA_MSVC_MP} AND MSVC)
+		target_compile_options(core PRIVATE /MP)
+		target_compile_options(${EXECCMD} PRIVATE /MP)
+	endif()
+	
 endif()
 
 # gcc compiler flags 
