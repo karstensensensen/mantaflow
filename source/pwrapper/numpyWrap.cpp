@@ -14,6 +14,9 @@
  * modifications: change long to Py_intptr_t in all dims related code,
  * in order to fix size miss match on msvc (long = 4 bytes, Py_intptr_t = 8 bytes in x64 builds)
  * 
+ * Change DataType to accept all types of signed integers as N_INT, instead of just NPY_INT,
+ * which is not guaranteed to be available on all platforms, when using cnpy for storing and loading npy files.
+ * 
  ******************************************************************************/
 
 #include "manta.h"
@@ -75,7 +78,7 @@ PyArrayContainer::ExtractData(void *_pParentPyArray)
 	pData 		= PyArray_DATA(pParent);
 	TotalSize 	= PyArray_SIZE(pParent);
 	Dims 		= std::vector<Py_intptr_t>(&pDims[0], &pDims[numDims]);
-
+	
 	int iDataType = PyArray_TYPE(pParent);
 	switch(iDataType) {
 	case NPY_FLOAT:
@@ -84,12 +87,14 @@ PyArrayContainer::ExtractData(void *_pParentPyArray)
 	case NPY_DOUBLE:
 		DataType = N_DOUBLE;
 		break;
-	case NPY_INT:
-		DataType = N_INT;
-		break;
 	default:
-		errMsg("unknown type of Numpy array");
+		if (PyArray_ISNUMBER(pParent) && PyArray_ISSIGNED(pParent))
+			DataType = N_INT;
+		else
+			errMsg("unknown type of Numpy array");
 		break;
+
+		
 	}
 }
 
